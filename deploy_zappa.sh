@@ -1,8 +1,5 @@
 #!/bin/bash
 
-# TO RUN:
-# docker run -v $(pwd):/outputs -it amazonlinux:2016.09 bash /outputs/deploy_zappa.sh
-
 set -ex
 
 if [[ $1 == -f ]]; then
