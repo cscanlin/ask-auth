@@ -39,11 +39,10 @@ class Client(Model):
 class Grant(Model):
     class Meta:
         table_name = "alexa-grants"
-    id = NumberAttribute(hash_key=True)
-    userId = UnicodeAttribute(range_key=True)
+    userId = UnicodeAttribute()
 
-    client_id = UnicodeAttribute()
-    code = UnicodeAttribute()
+    client_id = UnicodeAttribute(hash_key=True)
+    code = UnicodeAttribute(range_key=True)
 
     redirect_uri = UnicodeAttribute()
     scope = UnicodeAttribute()
@@ -65,11 +64,10 @@ class Grant(Model):
 class Token(Model):
     class Meta:
         table_name = "alexa-tokens"
-    id = NumberAttribute(hash_key=True)
+    access_token = UnicodeAttribute(hash_key=True)
     client_id = UnicodeAttribute()
     userId = UnicodeAttribute(range_key=True)
     token_type = UnicodeAttribute()
-    access_token = UnicodeAttribute()
     refresh_token = UnicodeAttribute()
     expires = UTCDateTimeAttribute()
     scope = UnicodeAttribute()
