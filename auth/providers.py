@@ -1,13 +1,18 @@
 from datetime import datetime, timedelta
+import urllib
 
-
-from flask import g, render_template, jsonify, request
+from flask import g
+from flask_ask import session
 from flask_oauthlib.provider import OAuth2Provider
 
-from models import Client, Grant, Token
+from models import AlexaUser, Client, Grant, Token
 
 def default_provider(app):
     oauth = OAuth2Provider(app)
+
+    @app.before_request
+    def load_current_user():
+        g.user = next(AlexaUser.query(session.user.userId))
 
     @oauth.clientgetter
     def get_client(client_id):
@@ -28,48 +33,24 @@ def default_provider(app):
     @oauth.grantsetter
     def set_grant(client_id, code, request, *args, **kwargs):
         expires = datetime.utcnow() + timedelta(seconds=120000)
+        redirect_params = {'code': code['code'], 'state': request.state}
+        redirect_uri = '{}?{}'.format(request.redirect_uri, urllib.urlencode(redirect_params))
         grant = Grant(
             client_id=client_id,
             code=code['code'],
-            redirect_uri=request.redirect_uri,
+            redirect_uri=redirect_uri,
             scope=' '.join(request.scopes),
-            user_id=g.user.id,
+            userId=g.user.userId,
             expires=expires,
         )
+        print(grant.__dict__)
         grant.save()
 
     @oauth.tokensetter
     def set_token(token, request, *args, **kwargs):
-        # In real project, a token is unique bound to user and client.
-        # Which means, you don't need to create a token every time.
         tok = Token(**token)
-        tok.user_id = request.user.id
+        tok.userId = request.user.userId
         tok.client_id = request.client.client_id
         tok.save()
 
     return oauth
-
-def create_server(app, oauth=None):
-    if not oauth:
-        oauth = default_provider(app)
-
-    @app.route('/oauth/authorize', methods=['GET', 'POST'])
-    @oauth.authorize_handler
-    def authorize(*args, **kwargs):
-        if request.method == 'GET':
-            kwargs['client'] = next(Client.query(kwargs.get('client_id')))
-            return render_template('oauthorize.html', **kwargs)
-
-        confirm = request.form.get('confirm', 'no')
-        return confirm == 'yes'
-
-    @app.route('/oauth/token', methods=['POST', 'GET'])
-    @oauth.token_handler
-    def access_token():
-        return {}
-
-    @oauth.invalid_response
-    def require_oauth_invalid(req):
-        return jsonify(message=req.error_message), 401
-
-    return app

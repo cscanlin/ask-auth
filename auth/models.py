@@ -1,9 +1,10 @@
 from datetime import datetime, timedelta
 
 from pynamodb.models import Model
-from pynamodb.attributes import NumberAttribute, UnicodeAttribute, UTCDateTimeAttribute
+from pynamodb.attributes import UnicodeAttribute, UTCDateTimeAttribute
 
 class AlexaUser(Model):
+
     class Meta:
         table_name = "alexa-users"
 
@@ -11,14 +12,18 @@ class AlexaUser(Model):
     name = UnicodeAttribute(null=True)
 
 class Client(Model):
+
     class Meta:
         table_name = "alexa-clients"
+
     client_id = UnicodeAttribute(hash_key=True)
-    name = UnicodeAttribute()
     client_secret = UnicodeAttribute()
-    client_type = UnicodeAttribute()
     _redirect_uris = UnicodeAttribute()
-    default_scope = UnicodeAttribute()
+    scope = UnicodeAttribute()
+
+    @property
+    def client_type(self):
+        return 'confidential'
 
     @property
     def redirect_uris(self):
@@ -32,17 +37,19 @@ class Client(Model):
 
     @property
     def default_scopes(self):
-        if self.default_scope:
-            return self.default_scope.split()
+        if self.scope:
+            return self.scope.split()
         return []
 
 class Grant(Model):
+
     class Meta:
         table_name = "alexa-grants"
+
     userId = UnicodeAttribute()
 
     client_id = UnicodeAttribute(hash_key=True)
-    code = UnicodeAttribute(range_key=True)
+    code = UnicodeAttribute()
 
     redirect_uri = UnicodeAttribute()
     scope = UnicodeAttribute()
@@ -60,13 +67,14 @@ class Grant(Model):
             return self.scope.split()
         return None
 
-
 class Token(Model):
+
     class Meta:
         table_name = "alexa-tokens"
+
     access_token = UnicodeAttribute(hash_key=True)
     client_id = UnicodeAttribute()
-    userId = UnicodeAttribute(range_key=True)
+    userId = UnicodeAttribute()
     token_type = UnicodeAttribute()
     refresh_token = UnicodeAttribute()
     expires = UTCDateTimeAttribute()
@@ -95,3 +103,14 @@ if __name__ == '__main__':
     Client.create_table(read_capacity_units=1, write_capacity_units=1)
     Grant.create_table(read_capacity_units=1, write_capacity_units=1)
     Token.create_table(read_capacity_units=1, write_capacity_units=1)
+
+    client = Client(
+        client_id='ask-auth-dev',
+        client_secret='ask-auth-dev',
+        scope='ask-auth-dev',
+        _redirect_uris=' '.join((
+            'https://layla.amazon.com/api/skill/link/M1GSQ6I3501WFX',
+            'https://pitangui.amazon.com/api/skill/link/M1GSQ6I3501WFX',
+        ))
+    )
+    client.save()

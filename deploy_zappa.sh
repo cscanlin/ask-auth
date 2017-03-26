@@ -4,6 +4,7 @@ set -ex
 
 if [[ $1 == -f ]]; then
   remove_env="rm -rf docker_env &&"
+  update_deploy="update"
 elif [ $1 == -d ]; then
   update_deploy="deploy"
 else

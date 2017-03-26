@@ -1,7 +1,7 @@
 {
     "dev": {
         "aws_region": "us-east-1",
-        "app_function": "ask_auth.app",
+        "app_function": "linked_ask.app",
         "s3_bucket": "ask-auth",
         "manage_roles": false,
         "use_precompiled_packages": true
