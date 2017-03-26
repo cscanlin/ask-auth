@@ -1,0 +1,6 @@
+HelloIntent say hello
+HelloIntent what is my name
+IntroduceIntent my name is {chris|name}
+IntroduceIntent set my name to {chris|name}
+IntroduceIntent my name is {chris smith|name}
+IntroduceIntent set my name to {chris smith|name}
