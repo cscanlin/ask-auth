@@ -2,15 +2,18 @@
 
 set -ex
 
-if [[ $1 == -f ]]; then
-  remove_env="rm -rf docker_env &&"
-  update_deploy="update"
-elif [ $1 == -d ]; then
-  update_deploy="deploy"
-else
-  remove_env=""
-  update_deploy="update"
-fi
+remove_env=""
+update_deploy="update"
+stage="dev"
+
+while getopts ":fds:" arg; do
+  case $arg in
+    f ) remove_env="rm -rf docker_env &&";;
+    d ) update_deploy="deploy";;
+    s ) stage=${OPTARG};;
+    * ) exit 0;;
+  esac
+done
 
 main () {
   docker run -ti \
@@ -24,7 +27,7 @@ main () {
       source docker_env/bin/activate && \
       cd /var/ask-auth/ && \
       pip install -r requirements.txt && \
-      zappa $update_deploy dev
+      zappa $update_deploy $stage
     "
 }
 

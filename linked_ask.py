@@ -16,12 +16,12 @@ logger.setLevel(logging.DEBUG)
 
 def speech_response(speech_text):
     logger.info(speech_text)
-    return statement(speech_text).simple_card(request.type, speech_text)
+    return statement(speech_text).simple_card(request.type, speech_text) if request else speech_text
 
 @ask.intent('IntroduceIntent')
 def introduce(name):
     user = AlexaUser(
-        userId=g.user,
+        userId=g.user.userId,
         name=name,
     )
     user.save()
@@ -31,8 +31,7 @@ def introduce(name):
 @app.route('/hello')
 @ask.intent('HelloIntent')
 def hello():
-    user = next(AlexaUser.query(g.user))
-    speech_text = 'Hello {}'.format(user.name) if user else 'Hello. Please introduce yourself'
+    speech_text = 'Hello {}'.format(g.user.name) if g.user and g.user.name else 'Hello. Please introduce yourself'
     return speech_response(speech_text)
 
 if __name__ == '__main__':
